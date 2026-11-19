@@ -1,86 +1,139 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class ElevatorSUB extends SubsystemBase {
 
-    private final SparkMax Motor1 = new SparkMax(6,MotorType.kBrushless);
-
+    private final SparkMax Motor1 = new SparkMax(6, MotorType.kBrushless);
     private final RelativeEncoder encoder = Motor1.getEncoder();
+    private final SparkMaxConfig config = new SparkMaxConfig();
+    private final SparkClosedLoopController closed = Motor1.getClosedLoopController();
 
-    private final SparkClosedLoopController closed = Motor1.getClosedLoopController(); //envia setpoints
-    
-    double TargetHeight;
+    // Slot 0 = SUBIDA (ajuste aqui)
+    private static final ClosedLoopSlot SLOT_SUBIDA = ClosedLoopSlot.kSlot0;
+    private static final double KP_SUBIDA = 0.023;
+    private static final double KG_SUBIDA = 1.0;
+
+    // Slot 1 = DESCIDA (ajuste aqui)
+    private static final ClosedLoopSlot SLOT_DESCIDA = ClosedLoopSlot.kSlot1;
+    private static final double KP_DESCIDA = 0.023;
+    private static final double KG_DESCIDA = 0.35; // precisa ficar abaixo de ~0.44
+
+    private double setpoint;
+    private ClosedLoopSlot slotAtual = SLOT_SUBIDA;
+
+    public enum ElevatorState {
+        Movendo,
+        Alvo_L1,
+        Alvo_L2,
+        Alvo_L3,
+        PontoZero
+    }
+
+    private ElevatorState Estado = ElevatorState.PontoZero;
 
     public ElevatorSUB() {
+        config.smartCurrentLimit(60);
+        config.idleMode(IdleMode.kBrake);
+        config.closedLoopRampRate(0.8);
+        config.encoder.velocityConversionFactor(1);
+        config.encoder.positionConversionFactor(Constants.ElevatorConstants.CONVERSAOEMCM);
 
-   SparkMaxConfig configMotor1 = new SparkMaxConfig();
+        // ---------- Slot 0: subida ----------
+        config.closedLoop.pid(KP_SUBIDA, 0, 0, SLOT_SUBIDA);
+        config.closedLoop.outputRange(-0.8, 1.0, SLOT_SUBIDA);
+        config.closedLoop.feedForward.kG(KG_SUBIDA, SLOT_SUBIDA);
+        config.closedLoop.feedForward.kV(0.0021, SLOT_SUBIDA);
 
+        // ---------- Slot 1: descida ----------
+        config.closedLoop.pid(KP_DESCIDA, 0, 0, SLOT_DESCIDA);
+        config.closedLoop.outputRange(-0.8, 1.0, SLOT_DESCIDA);
+        config.closedLoop.feedForward.kG(KG_DESCIDA, SLOT_DESCIDA);
+        config.closedLoop.feedForward.kV(0.0021, SLOT_DESCIDA);
 
+        Motor1.setPeriodicFrameTimeout(5);
+        Motor1.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    configMotor1.closedLoop.pid(0.02, 0.0, 0.0);
+        // Depois do configure, para o fator de conversão já estar aplicado
+        encoder.setPosition(1.21);
+    }
 
-    configMotor1.closedLoop.maxMotion.cruiseVelocity(20).  //ir ajustando 
-    maxAcceleration(10).allowedProfileError(1);
+    public double getTensao() {
+        return Motor1.getAppliedOutput() * Motor1.getBusVoltage();
+    }
 
-    configMotor1.smartCurrentLimit(40);
-    configMotor1.closedLoop.outputRange(-0.5, 1.0);
-    configMotor1.idleMode(IdleMode.kBrake);
-    configMotor1.closedLoopRampRate(0.5);
+    public double getOutuputAppy() {
+        return Motor1.getAppliedOutput();
+    }
 
-
-    configMotor1.encoder.positionConversionFactor(Constants.ElevatorSUBConstants.CM_POR_ROTACAO_MOTOR);
-
-    Motor1.configure(configMotor1,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
-    encoder.setPosition(Constants.ElevatorSUBConstants.positionMotor);
-
-   }
-   
+    public double getBus() {
+        return Motor1.getBusVoltage();
+    }
 
     public double getPosicao() {
         return encoder.getPosition();
     }
-    public double getVelocity(){
+
+    public double getVelocidade() {
         return encoder.getVelocity();
     }
 
-    public void moverAte(double position) {
-       double alvo = MathUtil.clamp(position, 9.5, 73);
-       TargetHeight = alvo;
-       closed.setSetpoint(alvo, ControlType.kPosition);
-        
-}
+    public void setPosicao(double posicao) {
+        setpoint = posicao;
+        Estado = ElevatorState.Movendo;
 
-    public double getTargetHeight(){
-        return TargetHeight;
+        boolean descendo = posicao < getPosicao();
+        slotAtual = descendo ? SLOT_DESCIDA : SLOT_SUBIDA;
+
+        closed.setSetpoint(posicao, ControlType.kPosition, slotAtual);
     }
 
-    public double getAltura() {
-          return encoder.getPosition();
-            
+    public ElevatorState getEstado() {
+        return Estado;
     }
 
     @Override
     public void periodic() {
-        
-        SmartDashboard.putNumber("posi", getAltura());
-        SmartDashboard.putNumber("Posicao boladona kdsksk()", getAltura());
-        SmartDashboard.putNumber("velocidade", getVelocity());
-        SmartDashboard.putNumber("Elevator/Output", Motor1.getAppliedOutput());
+        SmartDashboard.putNumber("PosicaoCM(Elevator)", getPosicao());
+        SmartDashboard.putNumber("Velocidade(Elevator)", getVelocidade());
+        SmartDashboard.putNumber("tensao", getTensao());
+        SmartDashboard.putNumber("Apply Output", getOutuputAppy());
+        SmartDashboard.putNumber("Elevator/Erro", setpoint - getPosicao());
+        SmartDashboard.putString("Elevator/Slot", slotAtual == SLOT_DESCIDA ? "Descida" : "Subida");
+
+        switch (Estado) {
+
+            case Movendo:
+                if (Math.abs(getPosicao() - setpoint) <= 1.0) {
+
+                    if (Math.abs(setpoint - Constants.ElevatorConstants.pointL1) <= 1.2) {
+                        Estado = ElevatorState.Alvo_L1;
+                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL2) <= 1.2) {
+                        Estado = ElevatorState.Alvo_L2;
+                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL3) <= 1.2) {
+                        Estado = ElevatorState.Alvo_L3;
+                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointl0) <= 1.2) {
+                        Estado = ElevatorState.PontoZero;
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        SmartDashboard.putString("Elevator/Estado", getEstado().toString());
     }
 }

@@ -22,31 +22,32 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.GarraConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.ElevatorCMD;
-import frc.robot.commands.GripperCMD;
-import frc.robot.commands.sequential.SequentialL2;
-import frc.robot.commands.sequential.SequentialL3;
 import frc.robot.subsystems.ElevatorSUB;
-import frc.robot.subsystems.GripperSUB;
+import frc.robot.subsystems.GarraSUB;
+import frc.robot.subsystems.GarraSUB.Estado;
+import frc.robot.commands.GarraCMD;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import java.lang.ModuleLayer.Controller;
-
 import swervelib.SwerveInputStream;
 
 public class RobotContainer {
-  // Elevator
-   private final ElevatorSUB elevado = new ElevatorSUB();
-   private final GripperSUB gripper = new GripperSUB();
-   private final SequentialL2 sequential2 = new SequentialL2(elevado, gripper);
-   private final SequentialL3 sequentialL3 = new SequentialL3(elevado, gripper);
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController driverXbox = new CommandXboxController(0);
   private final CommandXboxController co_piloto = new CommandXboxController(1);
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
       "swerve/neo"));
+  //Elevador
+
+  private final ElevatorSUB elevatorsub = new ElevatorSUB();
+
+  //Garra
+
+  private final GarraSUB garra = new GarraSUB();
 
 
   // Establish a Sendable Chooser that will be able to be sent to the
@@ -69,8 +70,8 @@ public class RobotContainer {
 
       //Converte driver para movimentação de Angulação controlada
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> -driverXbox.getLeftY() * 0.6,                                         //Alterar a força de translação Y do robô
-      () -> -driverXbox.getLeftX() * 0.6)                                         //Alterar a força de translação X do robô
+      () -> -driverXbox.getLeftY() * 0.4,                                         //Alterar a força de translação Y do robô
+      () -> -driverXbox.getLeftX() * 0.4)                                         //Alterar a força de translação X do robô
       .withControllerRotationAxis(() -> -driverXbox.getRightX() * 0.4)            //Altarar a força de rotação do robô
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
@@ -99,23 +100,23 @@ public class RobotContainer {
     //Command para zerar o giroscópio
     driverXbox.rightBumper().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
-    //Command do Elevator
+    //Command do elevador
 
-    //pointL1 so vai pro l1 mesmo
-    co_piloto.a().onTrue(new ElevatorCMD(elevado, Constants.ElevatorSUBConstants.pointL1));
+    driverXbox.a().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL1));
+    driverXbox.b().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL2));
+    driverXbox.y().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL3));
+    driverXbox.x().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointl0));
 
-    //pointL2 sequencial
+    //Command da garra
+ 
 
-    co_piloto.b().onTrue(new SequentialL2(elevado, gripper));
+    co_piloto.rightTrigger().whileTrue(new GarraCMD(garra, Estado.COLETANDO));
+    co_piloto.leftTrigger().whileTrue(new GarraCMD(garra, Estado.EJETANDO));
 
-    //point l3 sequencial
-
-    co_piloto.y().onTrue(new SequentialL3(elevado, gripper));
-
-    //iniciar 
-    
-    co_piloto.rightTrigger().toggleOnTrue(new GripperCMD(gripper, Constants.GripperConstants.velcolt));
-    co_piloto.rightTrigger().toggleOnTrue(new GripperCMD(gripper, Constants.GripperConstants.velexp));
+    driverXbox.povDown().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_1));
+    driverXbox.povRight().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_2));
+    driverXbox.povUp().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_3));
+  
   }
 
   public Command getAutonomousCommand() {

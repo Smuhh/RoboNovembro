@@ -49,36 +49,23 @@ public final class Constants
     public static final double TURN_CONSTANT    = 6;
   }
 
-    public static class ElevatorSUBConstants {
-    public static final int ControllerPort = 0;
-
-    public static final int MOTOR1_ELEVADOR = 6;
+  public static class ElevatorConstants {
+    public static final double PASSO_DACORRENTEMM = 5.25;
+    public static final double Reducao = 5.0; 
+    public static final double DENTES_CATRACA = 18.0;
+    public static final double CONVERSAOEMCM = (DENTES_CATRACA * PASSO_DACORRENTEMM) / (10 * Reducao);
     
-        public static final double Reducao = 5.0; 
+    public static final double pointl0 = 1.6;
+    public static final double pointL1 = 9.5;
+    public static final double pointL2 = 38.20; 
+    public static final double pointL3 = 43.0;
+  }
 
-        //Niveis
-        
-        public static final double positionMotor = 9.5;
-        public static final double pointL1 = positionMotor;  // na vida real ele é o 0 / 9,5
-        public static final double pointL2 = 38.209861755371094; // é pra ser 51,5
-        public static final double pointL3 = 56.07456970214844;  // é pra ser 72 na vida real
-        public static final double DENTES_CATRACA = 18.0;
+  public static class GarraConstants {
+    public static final double ANGULO_PONTO_1 = 0.92;
+    public static final double ANGULO_PONTO_2 = 3.57;
+    public static final double ANGULO_PONTO_3 = 6.28;
+  }
 
-        // Valor real passo em milímetros;
-        public static final double PASSO_CORRENTE_MM = 5.25; 
-
-       public static final double CM_POR_ROTACAO_MOTOR =
-         (DENTES_CATRACA * PASSO_CORRENTE_MM) / ( 10 * Reducao);
-
-         public static final double TOLERANCIA = 0.5;
-    }
-    
-    public static class GripperConstants{
-
-      public static final double velcolt = -1200;
-      public static final double velexp = 1200;
-      public static final int MOTOR2_GRIPPER = 7;
-
-    }
   }
 
