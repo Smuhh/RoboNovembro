@@ -1,3 +1,9 @@
+<h1 align="center">🤖 RoboNovembro – FRC Robot</h1>
+
+<p align="center">
+  <strong>FIRST Robotics Competition | MTECH #9603</strong>
+</p>
+
 Este repositório contém o código do robô, equipado com um sistema de movimentação Swerve Drive, elevador de três níveis e uma garra articulada com diferentes posições para coleta de game pieces.
 
 O projeto reúne a integração dos mecanismos, controle de movimentação e automação das funcionalidades do robô.
