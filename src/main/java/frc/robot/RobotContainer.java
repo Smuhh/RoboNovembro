@@ -24,11 +24,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GarraConstants;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.ElevatorCMD;
+import frc.robot.commands.SequentialL1;
+import frc.robot.commands.SequentialL2;
+import frc.robot.commands.SequentialL3;
+import frc.robot.commands.Garra.GarraCMD;
+import frc.robot.commands.swervedrive.Elevador.ElevatorCMD;
 import frc.robot.subsystems.ElevatorSUB;
 import frc.robot.subsystems.GarraSUB;
 import frc.robot.subsystems.GarraSUB.Estado;
-import frc.robot.commands.GarraCMD;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import java.lang.ModuleLayer.Controller;
@@ -44,7 +47,7 @@ public class RobotContainer {
   //Elevador
 
   private final ElevatorSUB elevatorsub = new ElevatorSUB();
-
+        
   //Garra
 
   private final GarraSUB garra = new GarraSUB();
@@ -102,20 +105,17 @@ public class RobotContainer {
 
     //Command do elevador
 
-    driverXbox.a().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL1));
-    driverXbox.b().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL2));
-    driverXbox.y().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL3));
-    driverXbox.x().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointl0));
 
     //Command da garra
- 
-
-    co_piloto.rightTrigger().whileTrue(new GarraCMD(garra, Estado.COLETANDO));
-    co_piloto.leftTrigger().whileTrue(new GarraCMD(garra, Estado.EJETANDO));
+     driverXbox.a().onTrue(new SequentialL1(elevatorsub,garra));
+     driverXbox.b().onTrue(new SequentialL2(elevatorsub, garra));
+     driverXbox.y().onTrue(new SequentialL3(elevatorsub, garra));
+     
+    driverXbox.rightTrigger().onTrue(new GarraCMD(garra, Estado.COLETANDO));
+    driverXbox.leftTrigger().whileTrue(new GarraCMD(garra, Estado.EJETANDO));
 
     driverXbox.povDown().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_1));
-    driverXbox.povRight().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_2));
-    driverXbox.povUp().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_3));
+    driverXbox.povUp().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_ERETO));
   
   }
 

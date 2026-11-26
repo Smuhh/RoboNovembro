@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -10,7 +12,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -23,12 +24,12 @@ public class ElevatorSUB extends SubsystemBase {
 
     // Slot 0 = SUBIDA (ajuste aqui)
     private static final ClosedLoopSlot SLOT_SUBIDA = ClosedLoopSlot.kSlot0;
-    private static final double KP_SUBIDA = 0.023;
-    private static final double KG_SUBIDA = 1.0;
+    private static final double KP_SUBIDA = 0.009; //0.019 nao deu
+    private static final double KG_SUBIDA = 0.7;
 
     // Slot 1 = DESCIDA (ajuste aqui)
     private static final ClosedLoopSlot SLOT_DESCIDA = ClosedLoopSlot.kSlot1;
-    private static final double KP_DESCIDA = 0.023;
+    private static final double KP_DESCIDA = 0.015; //0.21 nao deu 
     private static final double KG_DESCIDA = 0.35; // precisa ficar abaixo de ~0.44
 
     private double setpoint;
@@ -36,13 +37,12 @@ public class ElevatorSUB extends SubsystemBase {
 
     public enum ElevatorState {
         Movendo,
-        Alvo_L1,
         Alvo_L2,
         Alvo_L3,
-        PontoZero
+        Alvo_L1
     }
 
-    private ElevatorState Estado = ElevatorState.PontoZero;
+    private ElevatorState Estado = ElevatorState.Alvo_L1;
 
     public ElevatorSUB() {
         config.smartCurrentLimit(60);
@@ -106,26 +106,23 @@ public class ElevatorSUB extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("PosicaoCM(Elevator)", getPosicao());
-        SmartDashboard.putNumber("Velocidade(Elevator)", getVelocidade());
-        SmartDashboard.putNumber("tensao", getTensao());
-        SmartDashboard.putNumber("Apply Output", getOutuputAppy());
-        SmartDashboard.putNumber("Elevator/Erro", setpoint - getPosicao());
-        SmartDashboard.putString("Elevator/Slot", slotAtual == SLOT_DESCIDA ? "Descida" : "Subida");
+        Logger.recordOutput("Elevator/PosicaoCM", getPosicao());
+        Logger.recordOutput("Elevator/Velocidade", getVelocidade());
+        Logger.recordOutput("Elevator/Tensão", getTensao());
+        Logger.recordOutput("Elevator/Erro", setpoint - getPosicao());
+        Logger.recordOutput("Elevator/Slot", slotAtual == SLOT_DESCIDA ? "Descida" : "Subida");
 
         switch (Estado) {
 
             case Movendo:
                 if (Math.abs(getPosicao() - setpoint) <= 1.0) {
 
-                    if (Math.abs(setpoint - Constants.ElevatorConstants.pointL1) <= 1.2) {
-                        Estado = ElevatorState.Alvo_L1;
-                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL2) <= 1.2) {
-                        Estado = ElevatorState.Alvo_L2;
-                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL3) <= 1.2) {
+                    if (Math.abs(setpoint - Constants.ElevatorConstants.pointL2) <= 1.2) {
+                        Estado = ElevatorState.Alvo_L2;}
+                     else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL3) <= 1.2) {
                         Estado = ElevatorState.Alvo_L3;
-                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointl0) <= 1.2) {
-                        Estado = ElevatorState.PontoZero;
+                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL1) <= 1.2) {
+                        Estado = ElevatorState.Alvo_L1;
                     }
                 }
                 break;
@@ -134,6 +131,6 @@ public class ElevatorSUB extends SubsystemBase {
                 break;
         }
 
-        SmartDashboard.putString("Elevator/Estado", getEstado().toString());
+        Logger.recordOutput("Elevator/Estado", getEstado().toString());
     }
 }

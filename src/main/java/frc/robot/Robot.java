@@ -8,13 +8,14 @@ import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
+import frc.robot.Constants;
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
  * described in the TimedRobot documentation. If you change the name of this class or the package after creating this
@@ -30,20 +31,21 @@ public class Robot extends LoggedRobot
 
   private Timer disabledTimer;
 
-  public Robot()
-  {
+  public Robot(){
     instance = this;
 
     Logger.recordMetadata("Mtech", "Mtech9603"); // Set a metadata value
 
-    if (isReal()) {
-    Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
-    Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-} else {
-    Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
-    Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-  }
-Logger.start();
+   if (isReal()) {
+        Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs"));
+        Logger.addDataReceiver(new NT4Publisher());
+    } else {
+        Logger.addDataReceiver(new WPILOGWriter());
+        Logger.addDataReceiver(new NT4Publisher());
+    }
+
+    Logger.start();
+
   }
   public static Robot getInstance()
   {

@@ -55,17 +55,20 @@ public final class Constants
     public static final double DENTES_CATRACA = 18.0;
     public static final double CONVERSAOEMCM = (DENTES_CATRACA * PASSO_DACORRENTEMM) / (10 * Reducao);
     
-    public static final double pointl0 = 1.6;
-    public static final double pointL1 = 9.5;
-    public static final double pointL2 = 38.20; 
-    public static final double pointL3 = 43.0;
+    public static final double pointL1 = 2.4;
+    public static final double pointL2 = 9.714987754821777; //38.20 antigo
+    public static final double pointL3 = 32.25994110107422;  //original = 43.0
   }
 
   public static class GarraConstants {
-    public static final double ANGULO_PONTO_1 = 0.92;
-    public static final double ANGULO_PONTO_2 = 3.57;
-    public static final double ANGULO_PONTO_3 = 6.28;
+    public static final double ANGULO_PONTO_1 = 1.04761934280395; //0.53
+    public static final double ANGULO_PONTO_ERETO = 3.57; //1.85
   }
+ 
+  public static final Mode simMode = Mode.REPLAY; // REPLAY para usar o log
 
-  }
+  public enum Mode { SIM, REPLAY }
+
+  // ... suas outras constantes (ElevatorConstants etc.) continuam aqui
+}
 

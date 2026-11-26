@@ -1,4 +1,4 @@
-package frc.robot.commands;
+package frc.robot.commands.swervedrive.Elevador;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ElevatorSUB;
@@ -7,6 +7,7 @@ public class ElevatorCMD extends Command {
     
 private final ElevatorSUB elevatorsub;
 private final double position;
+
 
 public ElevatorCMD(ElevatorSUB elevator, double position) {
 this.elevatorsub = elevator;
@@ -17,7 +18,6 @@ addRequirements(elevator);}
 public void initialize() {
 
 elevatorsub.setPosicao(position);
-
 }
 
 
