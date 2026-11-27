@@ -45,7 +45,7 @@ public class ElevatorSUB extends SubsystemBase {
     private ElevatorState Estado = ElevatorState.Alvo_L1;
 
     public ElevatorSUB() {
-        config.smartCurrentLimit(60);
+        config.smartCurrentLimit(40);
         config.idleMode(IdleMode.kBrake);
         config.closedLoopRampRate(0.8);
         config.encoder.velocityConversionFactor(1);

@@ -6,6 +6,9 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,10 +27,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GarraConstants;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Limelight.LimelightSub;
 import frc.robot.commands.SequentialL1;
 import frc.robot.commands.SequentialL2;
 import frc.robot.commands.SequentialL3;
 import frc.robot.commands.Garra.GarraCMD;
+import frc.robot.commands.LimelightCMD.AlignSwerve;
 import frc.robot.commands.swervedrive.Elevador.ElevatorCMD;
 import frc.robot.subsystems.ElevatorSUB;
 import frc.robot.subsystems.GarraSUB;
@@ -51,7 +56,11 @@ public class RobotContainer {
 
   private final GarraSUB garra = new GarraSUB();
 
+private final int ALIGN_TAG_ID = 23;
+private final double ALIGN_MAX_ROT = 0.4; // limite da rotação (-1 a 1)
+private final PIDController alignPID = new PIDController(0.05, 0, 0);
 
+  private final LimelightSub limelightSub = new LimelightSub();
   // Establish a Sendable Chooser that will be able to be sent to the
   // SmartDashboard, allowing selection of desired auto
   private final SendableChooser<Command> autoChooser;
@@ -72,9 +81,9 @@ public class RobotContainer {
 
       //Converte driver para movimentação de Angulação controlada
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> -driverXbox.getLeftY() * 0.4,                                         //Alterar a força de translação Y do robô
-      () -> -driverXbox.getLeftX() * 0.4)                                         //Alterar a força de translação X do robô
-      .withControllerRotationAxis(() -> -driverXbox.getRightX() * 0.4)            //Altarar a força de rotação do robô
+      () -> -driverXbox.getLeftY() * 0.7,                                         //Alterar a força de translação Y do robô
+      () -> -driverXbox.getLeftX() * 0.7)                                         //Alterar a força de translação X do robô
+      .withControllerRotationAxis(() -> -driverXbox.getRightX() * 0.7)            //Altarar a força de rotação do robô
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
@@ -97,6 +106,20 @@ public class RobotContainer {
   private void configureBindings() {
     //Command do Drive Angular Velocity
         Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+
+
+SwerveInputStream alignStream = driveAngularVelocity.copy()
+    .withControllerRotationAxis(() -> {
+        if (limelightSub.getTV() && limelightSub.hasTag(ALIGN_TAG_ID)) {
+            double tx = limelightSub.gettX();
+            double rot = alignPID.calculate(tx, Constants.LimelightConstants.txvalue);
+            return MathUtil.clamp(rot, -ALIGN_MAX_ROT, ALIGN_MAX_ROT);
+        }
+        // sem tag: o joystick direito controla a rotação normalmente
+        return -driverXbox.getRightX() * 0.4;
+    });
+
+
     drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); //Definir o comando padrão para o drive
 
     //Command para zerar o giroscópio
@@ -110,12 +133,15 @@ public class RobotContainer {
      driverXbox.b().onTrue(new SequentialL2(elevatorsub, garra));
      driverXbox.y().onTrue(new SequentialL3(elevatorsub, garra));
      driverXbox.x().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL1));
+
      
     driverXbox.rightTrigger().onTrue(new GarraCMD(garra, Estado.COLETANDO));
     driverXbox.leftTrigger().whileTrue(new GarraCMD(garra, Estado.EJETANDO));
 
     driverXbox.povDown().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_1));
     driverXbox.povUp().onTrue(new GarraCMD(garra, GarraConstants.ANGULO_PONTO_ERETO));
+    driverXbox.povLeft().whileTrue(drivebase.driveFieldOriented(alignStream));
+    // driverXbox.povLeft().onTrue(new AlignSwerve(limelightSub, drivebase));
   
   }
 

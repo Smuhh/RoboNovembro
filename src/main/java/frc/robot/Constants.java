@@ -69,6 +69,10 @@ public final class Constants
 
   public enum Mode { SIM, REPLAY }
 
+  public static class LimelightConstants{
+   public static final double txvalue = 7.50;
+  }
+
   // ... suas outras constantes (ElevatorConstants etc.) continuam aqui
 }
 
