@@ -101,7 +101,7 @@ public class RobotContainer {
     drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); //Definir o comando padrão para o drive
 
     //Command para zerar o giroscópio
-    driverXbox.rightBumper().onTrue(Commands.runOnce(drivebase::zeroGyro));
+     driverXbox.rightBumper().onTrue(drivebase.runOnce(drivebase::zeroDriverHeading));
 
     //Command do elevador
 
@@ -110,6 +110,7 @@ public class RobotContainer {
      driverXbox.a().onTrue(new SequentialL1(elevatorsub,garra));
      driverXbox.b().onTrue(new SequentialL2(elevatorsub, garra));
      driverXbox.y().onTrue(new SequentialL3(elevatorsub, garra));
+     driverXbox.x().onTrue(new ElevatorCMD(elevatorsub, Constants.ElevatorConstants.pointL1));
      
     driverXbox.rightTrigger().onTrue(new GarraCMD(garra, Estado.COLETANDO));
     driverXbox.leftTrigger().whileTrue(new GarraCMD(garra, Estado.EJETANDO));

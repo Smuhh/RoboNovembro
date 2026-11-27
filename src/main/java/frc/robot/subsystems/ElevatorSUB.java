@@ -24,13 +24,13 @@ public class ElevatorSUB extends SubsystemBase {
 
     // Slot 0 = SUBIDA (ajuste aqui)
     private static final ClosedLoopSlot SLOT_SUBIDA = ClosedLoopSlot.kSlot0;
-    private static final double KP_SUBIDA = 0.009; //0.019 nao deu
-    private static final double KG_SUBIDA = 0.7;
+    private static final double KP_SUBIDA = 0.023; //0.009 deu certo
+    private static final double KG_SUBIDA = 0.9; //0.7 deu certo
 
     // Slot 1 = DESCIDA (ajuste aqui)
     private static final ClosedLoopSlot SLOT_DESCIDA = ClosedLoopSlot.kSlot1;
-    private static final double KP_DESCIDA = 0.015; //0.21 nao deu 
-    private static final double KG_DESCIDA = 0.35; // precisa ficar abaixo de ~0.44
+    private static final double KP_DESCIDA = 0.023; //0.015 deu certo
+    private static final double KG_DESCIDA = 0.35; // 0.35 deu certo tem que ficar abaixo de 0.44
 
     private double setpoint;
     private ClosedLoopSlot slotAtual = SLOT_SUBIDA;
@@ -89,6 +89,10 @@ public class ElevatorSUB extends SubsystemBase {
     public double getVelocidade() {
         return encoder.getVelocity();
     }
+    
+    public void setEstado(ElevatorState novoEstado) {
+    Estado = novoEstado;
+   }
 
     public void setPosicao(double posicao) {
         setpoint = posicao;
@@ -117,11 +121,11 @@ public class ElevatorSUB extends SubsystemBase {
             case Movendo:
                 if (Math.abs(getPosicao() - setpoint) <= 1.0) {
 
-                    if (Math.abs(setpoint - Constants.ElevatorConstants.pointL2) <= 1.2) {
+                    if (Math.abs(setpoint - Constants.ElevatorConstants.pointL2) <= 1.0) {
                         Estado = ElevatorState.Alvo_L2;}
-                     else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL3) <= 1.2) {
+                     else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL3) <= 1.0) {
                         Estado = ElevatorState.Alvo_L3;
-                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL1) <= 1.2) {
+                    } else if (Math.abs(setpoint - Constants.ElevatorConstants.pointL1) <= 1.0) {
                         Estado = ElevatorState.Alvo_L1;
                     }
                 }

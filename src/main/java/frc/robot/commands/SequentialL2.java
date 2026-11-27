@@ -1,4 +1,5 @@
 package frc.robot.commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants;
 import frc.robot.commands.Garra.GarraCMD;
@@ -11,6 +12,7 @@ public class SequentialL2 extends SequentialCommandGroup {
         addCommands(
             new GarraCMD(garra, Constants.GarraConstants.ANGULO_PONTO_ERETO), //garra fica reta para colocar a gamepiece na garra
             new GarraCMD(garra, Estado.COLETANDO),
+            new InstantCommand(() -> elevator.setEstado(ElevatorSUB.ElevatorState.Alvo_L2)),
             new ElevatorCMD(elevator, Constants.ElevatorConstants.pointL2) //elevador sobe para L2
         );
     }

@@ -11,7 +11,7 @@ public class SequentialL1 extends SequentialCommandGroup {
         addCommands(
             new GarraCMD(garra, Constants.GarraConstants.ANGULO_PONTO_ERETO), //garra fica reta para colocar a gamepiece na garra
             new GarraCMD(garra, Estado.COLETANDO),
-            new ElevatorCMD(elevator, Constants.ElevatorConstants.pointL1), //elevador sobe para L2
+            new ElevatorCMD(elevator, Constants.ElevatorConstants.pointL1),//elevador sobe para L2
             new GarraCMD(garra, Constants.GarraConstants.ANGULO_PONTO_1)
         );
     }
