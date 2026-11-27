@@ -1,60 +1,134 @@
-<<<<<<< HEAD
-# 📐 Estrutura Base - Swerve Drive (YAGSL Example)
+<h1 align="center">🤖 RoboNovembro - FRC </h1>
 
-Este repositório contém o código estrutural para a configuração e controle do sistema de movimentação Swerve Drive da **Equipe MTECH 9603**, baseado na biblioteca **YAGSL (Yet Another General Swerve Library)**.
+<p align="center">
+  <strong>FIRST Robotics Competition | MTECH #9603</strong>
+</p>
+Este repositório contém o código do robô, equipado com um sistema de movimentação Swerve Drive, elevador de três níveis e uma garra articulada com diferentes posições para coleta de game pieces.
 
-⚠️ **IMPORTANTE (Compatibilidade):** Esta versão do código foi desenvolvida e testada utilizando o **WPILib 2026.2.1**. Certifique-se de que seu ambiente de desenvolvimento esteja atualizado na mesma versão para evitar conflitos.
-
----
-
-## 🛠️ Hardware Suportado
-
-Este template foi projetado especificamente para módulos **Swerve SDS MK4 e MK4i** utilizando a seguinte combinação de hardware:
-
-- **Motores de Tração:** Falcon 500, NEO ou Kraken X60
-- **Motores de Rotação:** Falcon 500 ou NEO
-- **Giroscópio (IMU):** Pigeon 2.0
-- **Sensores de Azimute (Ângulo):** CANcoder
-
-> 🛑 **RECOMENDAÇÃO CRÍTICA:** Caso a sua Swerve utilize uma configuração **Full Kraken** (Kraken tanto na tração quanto na rotação), recomenda-se fortemente a utilização da estrutura oficial da **CTRE** para o controle nativo dos motores, em vez deste template.
+O desenvolvimento utiliza Java e WPILib, com implementação de controle de posição, gerenciamento de estados e integração entre os diferentes subsistemas do robô.
 
 ---
 
-## ⚙️ Configuração e Documentação
+## ⚙️ Sistemas do Robô
 
-Antes de realizar o deploy do código, é fundamental entender a lógica de inversão dos motores e sensores para evitar danos ao robô.
+### 🏎️ Swerve Drive
 
-- **Guia de Inversão dos Módulos e IMU:** Acesse a [Documentação de Inversão da YAGSL](https://docs.yagsl.com/configuring-yagsl/when-to-invert) para entender quando e como inverter os sinais no arquivo JSON.
-- **Documentação Geral:** Para compreender a estrutura do código, criação de comandos e telemetria, consulte a [Documentação Oficial da YAGSL](https://docs.yagsl.com/).
+O robô utiliza o sistema de movimentação Swerve Drive, permitindo que cada módulo controle individualmente sua direção e velocidade.
 
----
+Esse sistema proporciona movimentação omnidirecional, permitindo que o robô se desloque em diferentes direções sem precisar alterar necessariamente sua orientação.
 
-## 📂 Onde estão as configurações? (Onde mexer?)
-
-Para adaptar este código para o seu robô, você precisará alterar os arquivos de configuração JSON localizados na pasta do projeto:
-
-`src/main/deploy/swerve/`
-
-Dentro desta pasta, certifique-se de ajustar:
-
-1. **`swervedrive.json`:** Configurações gerais físicas do robô (distância entre eixos, pesos etc.).
-2. **Pasta `modules/`:** Os quatro arquivos JSON correspondentes a cada módulo (Front Left, Front Right, Back Left, Back Right), onde você deve inserir os **CAN IDs** corretos e os **Absolute Offsets** dos seus CANcoders.
+- Controle individual dos módulos.
+- Movimentação omnidirecional.
+- Controle de direção e velocidade.
+- Integração com o sistema de condução do robô.
 
 ---
 
-## 🚀 Primeiros Passos para Teste
+### 🏗️ Elevator — Elevador de 3 Níveis
 
-1. Coloque o robô sobre cavaletes ou blocos, com as rodas suspensas para segurança.
-2. Faça o alinhamento físico das rodas apontando todas para frente.
-3. Abra a telemetria do Swerve através do Shuffleboard ou SmartDashboard para validar os ângulos absolutos.
-4. Teste os eixos do joystick devagar antes de colocar o robô no chão.
+O elevador foi desenvolvido para realizar movimentações entre diferentes posições predefinidas, permitindo o posicionamento do mecanismo em três níveis de operação.
+
+| Nível | Altura |
+|---|---:|
+| 🟢 L1 | 9,5 cm |
+| 🔵 L2 | 52 cm |
+| 🟣 L3 | 72 cm |
+
+O sistema utiliza um motor brushless controlado por um SparkMax e um encoder integrado para realizar o acompanhamento da posição do mecanismo.
+
+#### 🎯 Controle de posição
+
+O elevador utiliza controle Closed Loop de posição, permitindo que o motor seja comandado para alcançar posições específicas.
+
+A posição é acompanhada por meio do encoder, com conversão dos valores de rotação para centímetros, facilitando o controle e o monitoramento do mecanismo.
+
+#### 📈 PID e Feedforward
+
+O controle do elevador utiliza configurações de PID e Feedforward para auxiliar no controle de movimentação e no comportamento do mecanismo durante o deslocamento.
+
+Foram configurados parâmetros específicos para os movimentos de subida e descida, permitindo utilizar ajustes diferentes dependendo da direção do movimento.
+
+#### 🔄 Slots de controle — Subida e Descida
+
+O sistema utiliza dois Closed Loop Slots no controlador SparkMax:
+
+- **Slot 0 — Subida:** utilizado quando o elevador recebe um comando para se movimentar para uma posição superior.
+- **Slot 1 — Descida:** utilizado quando o elevador recebe um comando para se movimentar para uma posição inferior.
+
+A seleção do slot é realizada automaticamente de acordo com a posição atual do elevador e o setpoint solicitado.
+
+Cada slot possui configurações próprias de PID e Feedforward, permitindo ajustar o comportamento do mecanismo de acordo com a direção do movimento.
+
+#### 🧠 Máquina de estados (State Machine)
+
+O elevador possui uma máquina de estados responsável por acompanhar a situação atual do mecanismo.
+
+Os estados implementados são:
+
+- **Movendo:** indica que o elevador está se deslocando em direção ao setpoint solicitado.
+- **Alvo_L1:** indica que o elevador alcançou a posição correspondente ao L1.
+- **Alvo_L2:** indica que o elevador alcançou a posição correspondente ao L2.
+- **Alvo_L3:** indica que o elevador alcançou a posição correspondente ao L3.
+- **PontoZero:** representa o estado associado à posição zero do mecanismo.
+
+A transição entre os estados de movimentação e os estados de destino é realizada por meio da verificação da posição atual do encoder em relação ao setpoint, utilizando uma tolerância de posição.
+
+#### 📊 Monitoramento
+
+O elevador possui informações disponibilizadas no SmartDashboard para acompanhamento e análise durante os testes.
+
+Os dados monitorados incluem:
+
+- Posição atual do elevador.
+- Velocidade do encoder.
+- Tensão aplicada ao motor.
+- Output aplicado pelo controlador.
+- Erro entre posição atual e setpoint.
+- Slot de controle atualmente utilizado.
+- Estado atual do elevador.
+
+Essas informações auxiliam no diagnóstico, ajuste de parâmetros e acompanhamento do comportamento do mecanismo.
 
 ---
 
-### 💡 Nota Técnica: Por que convertemos os valores do CANCoder?
+### 🦾 Gripper — Garra Articulada
 
-Se você notar no código ou na telemetria que os valores do `Absolute Encoder` estão sendo multiplicados por **360**, isso acontece porque o CANCoder faz a leitura nativa em rotações (de 0 a 1).
+A garra foi projetada para possuir diferentes posições angulares, permitindo adaptar sua orientação de acordo com a posição de coleta e o nível de operação do elevador.
 
-Multiplicamos por 360 para converter essa unidade para **graus** (360° equivalem a uma volta completa), que é o padrão que a YAGSL e a WPILib utilizam para calcular a direção correta de cada módulo.
+O mecanismo possui três posições de referência:
 
->>>>>>> e6ab665 (Primeiro envio do codigo do robo)
+- ⬇️ **Posição Inferior:** orientação voltada para coleta de game pieces em posições mais baixas.
+- ➖ **Posição Intermediária:** orientação mais horizontal, utilizada para posicionamento e movimentação do mecanismo.
+- ⬆️ **Posição Superior:** orientação inclinada para cima, permitindo adaptar o posicionamento da garra.
+
+A integração entre o elevador e a garra permite que os mecanismos sejam utilizados em diferentes configurações de operação do robô.
+
+### 🎯 SEQUENCIAIS AUTOMÁTICOS
+
+O robô possui 3 sequenciais (SequentialL1, SequentialL2 e SequentialL3), um para cada nível do elevador. Cada sequencial é um grupo de comandos que coordena a garra e o elevador em ordem, a partir de um único botão.
+
+Etapas de cada sequencial:
+
+A garra vai para o ângulo de referência.
+A garra executa a coleta da game piece.
+O elevador se movimenta até o setpoint do nível.
+O estado do elevador é atualizado (Alvo_L1, Alvo_L2 ou Alvo_L3).
+A garra vai para o ângulo final do nível.
+
+---
+
+## 🧰 Tecnologias utilizadas
+
+- **Java** — Linguagem de programação utilizada no desenvolvimento do software.
+- **WPILib** — Framework utilizado no desenvolvimento de robôs FRC.
+- **REV Robotics** — Biblioteca e controladores utilizados no sistema do elevador.
+- **Swerve Drive** — Sistema de movimentação omnidirecional.
+- **SmartDashboard** — Monitoramento e análise de informações durante os testes.
+
+---
+
+## 👨‍💻 Desenvolvimento
+
+Projeto desenvolvido pela equipe MTECH #9603 no contexto da FIRST Robotics Competition.
+
+O software reúne implementação de subsistemas, controle de mecanismos, gerenciamento de estados e integração dos sistemas do robô.
